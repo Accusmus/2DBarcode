@@ -53,19 +53,15 @@ int main()
     colour_detector colourDet;
     colourDet = colour_detector();
 
-    rgb = imread(imgPaths[5], 1);
+    rgb = imread(imgPaths[1], 1);
     if(rgb.data == NULL){
         cout << "Error: File could not be read" << endl;
         exit(1);
     }
 
-
+    //creates RGB filtered image that is clearer for easy reading for decoding message
+    //in the process is converted to hsv and then calculates a better RGB equivilant
     colourDet.makeRGB(rgb, rgbFiltered);
-
-
-    //find lines and place them as grid on 2d QR code
-
-    //blue.create(rgb.size(), CV_8UC1);
 
     colourDet.getCircles(rgb, grid);
 
@@ -78,100 +74,100 @@ int main()
     align.findGrid(grid);
     align.drawGrid(rgb);
 
-//    //----------------------------------------------------------------------
-//    //Simplified way of reading file
-//
-//    int gridDist = ((yMax - yMin) / (yCount)) * 1;
-//    int xPix = 0;
-//    int yPix = 0;
-//    bool skip = false;
-//    for(int y = 1; y < 11; y++){
-//        int length;
-//        if(y <= 6){
-//            length = 22;
-//        }else{
-//            length = 28;
-//        }
-//        for(int i = 1; i < length; i++){
-//            int startX1, startX2, startY1, startY2;
-//
-//            int currentX1, currentX2, currentY1, currentY2;
-//
-//            xPix = i -1;
-//            yPix = y -1;
-//            if(yPix <= 6){
-//                startX1 = xMin + (40 * 3) + 10;
-//                startX2 = xMin + (40 * 3) + 10 + 20;
-//                startY1 = yMin + 10;
-//                startY2 = yMin + 10;
-//            }else{
-//                startX1 = xMin + 10;
-//                startX2 = xMin + 10 + 20;
-//                startY1 = yMin + 10;
-//                startY2 = yMin + 10;
-//            }
-//
-//            if(y % 2 == 0) {
-//                if((i == 21 && length == 22) || (i == 27 && length == 28)){
-//                    skip = true;
-//                }else{
-//                    currentX1 = startX1 + (40*xPix) + 20;
-//                    currentX2 = startX2 + (40*xPix) + 20;
-//
-//                    currentY1 = startY1 + (20*yPix);
-//                    currentY2 = startY2 + (20*yPix);
-//                    skip = false;
-//                }
-//            }else{ // is an odd line
-//                if((i != 21 && length == 22) || (i != 27 && length == 28)){
-//                    currentX1 = startX1 + (40*xPix);
-//                    currentX2 = startX2 + (40*xPix);
-//
-//                    currentY1 = startY1 + (20*yPix);
-//                    currentY2 = startY2 + (20*yPix);
-//                    skip = false;
-//                }else{
-//                    currentX1 = startX1 + (40*20);
-//                    currentX2 = startX1;
-//
-//                    currentY1 = startY1 + (20*yPix);
-//                    currentY2 = startY2 + (20*(yPix+1));
-//                    skip = false;
-//                }
-//            }
-//
-//            if(!skip){
-//                unsigned char temp = 0;
-//                if(MpixelR(rgbFiltered, currentX1, currentY1) >= 220){
-//                    temp = temp | (1<<5);
-//                }
-//                if((int)MpixelG(rgbFiltered, currentX1, currentY1) >= 220){
-//                    temp = temp | (1<<4);
-//                }
-//                if((int)MpixelB(rgbFiltered, currentX1, currentY1) >= 220){
-//                    temp = temp | (1<<3);
-//                }
-//                if((int)MpixelR(rgbFiltered, currentX2, currentY2) >= 220){
-//                    temp = temp | (1<<2);
-//                }
-//                if((int)MpixelG(rgbFiltered, currentX2, currentY2) >= 220){
-//                    temp = temp | (1<<1);
-//                }
-//                if((int)MpixelB(rgbFiltered, currentX2, currentY2) >= 220){
-//                    temp = temp | (1);
-//                }
-//                cout << encodingarray[(unsigned int)temp];
-//            }
-//        }
-//    }
-//    cout << endl;
+   //----------------------------------------------------------------------
+   //Simplified way of reading file
+
+    //int gridDist = ((yMax - yMin) / ()) * 1;
+    int xPix = 0;
+    int yPix = 0;
+    bool skip = false;
+    for(int y = 1; y < 11; y++){
+        int length;
+        if(y <= 6){
+            length = 22;
+        }else{
+            length = 28;
+        }
+        for(int i = 1; i < length; i++){
+            int startX1, startX2, startY1, startY2;
+
+            int currentX1, currentX2, currentY1, currentY2;
+
+            xPix = i -1;
+            yPix = y -1;
+            if(yPix <= 6){
+                startX1 = align.getxMin() + (40 * 3) + 10;
+                startX2 = align.getxMin() + (40 * 3) + 10 + 20;
+                startY1 = align.getyMin() + 10;
+                startY2 = align.getyMin() + 10;
+            }else{
+                startX1 = align.getxMin() + 10;
+                startX2 = align.getxMin() + 10 + 20;
+                startY1 = align.getyMin() + 10;
+                startY2 = align.getyMin() + 10;
+            }
+
+            if(y % 2 == 0) {
+                if((i == 21 && length == 22) || (i == 27 && length == 28)){
+                    skip = true;
+                }else{
+                    currentX1 = startX1 + (40*xPix) + 20;
+                    currentX2 = startX2 + (40*xPix) + 20;
+
+                    currentY1 = startY1 + (20*yPix);
+                    currentY2 = startY2 + (20*yPix);
+                    skip = false;
+                }
+            }else{ // is an odd line
+                if((i != 21 && length == 22) || (i != 27 && length == 28)){
+                    currentX1 = startX1 + (40*xPix);
+                    currentX2 = startX2 + (40*xPix);
+
+                    currentY1 = startY1 + (20*yPix);
+                    currentY2 = startY2 + (20*yPix);
+                    skip = false;
+                }else{
+                    currentX1 = startX1 + (40*20);
+                    currentX2 = startX1;
+
+                    currentY1 = startY1 + (20*yPix);
+                    currentY2 = startY2 + (20*(yPix+1));
+                    skip = false;
+                }
+            }
+
+            if(!skip){
+                unsigned char temp = 0;
+                if(MpixelR(rgbFiltered, currentX1, currentY1) >= 220){
+                    temp = temp | (1<<5);
+                }
+                if((int)MpixelG(rgbFiltered, currentX1, currentY1) >= 220){
+                    temp = temp | (1<<4);
+                }
+                if((int)MpixelB(rgbFiltered, currentX1, currentY1) >= 220){
+                    temp = temp | (1<<3);
+                }
+                if((int)MpixelR(rgbFiltered, currentX2, currentY2) >= 220){
+                    temp = temp | (1<<2);
+                }
+                if((int)MpixelG(rgbFiltered, currentX2, currentY2) >= 220){
+                    temp = temp | (1<<1);
+                }
+                if((int)MpixelB(rgbFiltered, currentX2, currentY2) >= 220){
+                    temp = temp | (1);
+                }
+                cout << encodingarray[(unsigned int)temp];
+            }
+        }
+    }
+    cout << endl;
 
 
 
 
 
     imshow("Original", rgb);
-    imshow("Filtered", grid);
+    imshow("Filtered", rgbFiltered);
 
     waitKey(0);
     return 0;

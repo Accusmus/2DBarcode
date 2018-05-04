@@ -24,6 +24,10 @@ class image_aligner
         void drawGrid(Mat& rgbSrc);
         void findGrid(Mat &greySrc);
 
+        double getxMin();
+        double getxMax();
+        double getyMin();
+        double getyMax();
 
     protected:
 
@@ -31,10 +35,15 @@ class image_aligner
         vector<Vec3f> circles;
         vector<Vec2f> grid;
 
+        //parameters used for circle identification
         int cannyThresh;
         int centerThresh;
         int minRadius;
         int maxRadius;
+
+        //parameters given by grid identification
+        double xMin, xMax;
+        double yMin, yMax;
 };
 
 #endif // IMAGE_ALIGNER_H

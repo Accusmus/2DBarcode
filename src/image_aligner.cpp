@@ -6,12 +6,20 @@ image_aligner::image_aligner()
     centerThresh = 80;
     minRadius = 20;
     maxRadius = 60;
+
+    xMin = 10000.0;
+    xMax = -10000.0;
+    yMin = 10000.0;
+    yMax = -10000.0;
 }
 
 image_aligner::~image_aligner()
 {
     //dtor
 }
+
+//------------------------------------------------
+// find cirles in image
 
 void image_aligner::findCircles(Mat& greySrc){
     Mat grey;
@@ -22,6 +30,9 @@ void image_aligner::findCircles(Mat& greySrc){
     HoughCircles(grey, circles, HOUGH_GRADIENT, 1, grey.rows/8, cannyThresh, centerThresh, minRadius, maxRadius);
 }
 
+//------------------------------------------------
+// draw the circles that have been identified onto an rgb image
+// used for identifying the orintation of the 2D barcode
 
 void image_aligner::drawCircles(Mat& rgbSrc){
     if(circles.size() <= 0) cout << "There are no circles detected make sure to getCenters first" << endl;
@@ -35,9 +46,8 @@ void image_aligner::drawCircles(Mat& rgbSrc){
     }
 }
 
-vector<Vec3f> image_aligner::getCircles(){
-    return circles;
-}
+//------------------------------------------------------
+//find the grid for the 2D barcode this is used for fine alignment and finding distance between rows and cols
 
 
 void image_aligner::findGrid(Mat &greySrc){
@@ -50,7 +60,6 @@ void image_aligner::findGrid(Mat &greySrc){
 
     int xCount = 0;
     int yCount = 0;
-    double xMin = 1000.0, xMax = -1000.0, yMin = 1000.0, yMax = -1000.0;
 
     for(vector<Vec2f>::iterator ln = grid.begin(); ln != grid.end(); ln++){
 
@@ -102,6 +111,27 @@ void image_aligner::drawGrid(Mat& rgbSrc){
     }
 }
 
+//Getter Methods
+vector<Vec3f> image_aligner::getCircles(){
+    return circles;
+}
+
 vector<Vec2f> image_aligner::getGrid(){
     return grid;
+}
+
+double image_aligner::getxMin(){
+    return xMin;
+}
+
+double image_aligner::getxMax(){
+    return xMax;
+}
+
+double image_aligner::getyMin(){
+    return yMin;
+}
+
+double image_aligner::getyMax(){
+    return yMax;
 }
