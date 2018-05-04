@@ -24,6 +24,8 @@ class image_aligner
         void drawGrid(Mat& rgbSrc);
         void findGrid(Mat &greySrc);
 
+        void applyRotationTransform(Mat &src, Mat &dest);
+
         double getxMin();
         double getxMax();
         double getyMin();
@@ -32,6 +34,12 @@ class image_aligner
     protected:
 
     private:
+        // warp rotation matrices
+        Mat warpDst;
+        Mat warpRotateDst;
+        Mat rotMat;
+        Mat warpMat;
+
         vector<Vec3f> circles;
         vector<Vec2f> grid;
 

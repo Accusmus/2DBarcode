@@ -11,6 +11,9 @@ image_aligner::image_aligner()
     xMax = -10000.0;
     yMin = 10000.0;
     yMax = -10000.0;
+
+    rotMat = Mat(2, 3, CV_32FC1);
+    warpMat = Mat(2, 3, CV_32FC1);
 }
 
 image_aligner::~image_aligner()
@@ -110,6 +113,14 @@ void image_aligner::drawGrid(Mat& rgbSrc){
         line(rgbSrc, pt1, pt2, Scalar(0,0, 255), 2);
     }
 }
+
+void image_aligner::applyRotationTransform(Mat &src, Mat &dest){
+    cout << "not implemented yet" << endl;
+    warpDst.create(src.size(), CV_8UC3);
+
+
+}
+
 
 //Getter Methods
 vector<Vec3f> image_aligner::getCircles(){
