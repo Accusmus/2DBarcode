@@ -65,148 +65,157 @@ int main()
 
     //find lines and place them as grid on 2d QR code
 
-    blue.create(rgb.size(), CV_8UC1);
+    //blue.create(rgb.size(), CV_8UC1);
 
-    colourDet.getGrid(rgb,grid);
+    colourDet.getCircles(rgb, grid);
     threshold(grid, grid, 0, 255, CV_THRESH_BINARY);
 
+    image_aligner align = image_aligner();
+    align.findCircles(grid);
+    align.drawCircles(rgb);
 
-    vector<Vec2f> lines;
-    HoughLines(grid, lines, 0.55, CV_PI/180, 600, 0, 0);
+    colourDet.getGrid(rgb, grid);
+    threshold(grid, grid, 0, 255, CV_THRESH_BINARY);
 
-    int xCount = 0;
-    int yCount = 0;
-    double xMin = 1000.0, xMax = -1000.0, yMin = 1000.0, yMax = -1000.0;
+    align.findGrid(grid);
+    align.drawGrid(rgb);
 
-    for(vector<Vec2f>::iterator ln = lines.begin(); ln != lines.end(); ln++){
-
-
-        float rho = (*ln)[0], theta = (*ln)[1];
-        Point pt1, pt2;
-        double a = cos(theta), b = sin(theta);
-        double x0 = a*rho, y0 = b*rho;
-        pt1.x = cvRound(x0 + 1000*(-b));
-        pt1.y = cvRound(y0 + 1000*(a));
-        pt2.x = cvRound(x0 - 1000*(-b));
-        pt2.y = cvRound(y0 - 1000*(a));
-
-        double angle = abs(atan2(pt2.y - pt1.y, pt2.x - pt1.x)* 180/CV_PI);
-        if(angle == 0){
-            line(rgb, pt1, pt2, Scalar(0,0, 255), 2);
-            yCount++;
-            if(pt1.y >= yMax){
-                yMax = pt1.y;
-            }else if(pt1.y <= yMin){
-                yMin = pt1.y;
-            }
-        }else if(angle == 90){
-            line(rgb, pt1, pt2, Scalar(0,0, 255), 2);
-            xCount++;
-            if(pt1.x >= xMax){
-                xMax = pt1.x;
-            }else if(pt1.x <= xMin){
-                xMin = pt1.x;
-            }
-        }else{
-            lines.erase(ln);
-        }
-    }
-
-
-    //----------------------------------------------------------------------
-    //Simplified way of reading file
-
-    int gridDist = ((yMax - yMin) / (yCount)) * 1;
-    int xPix = 0;
-    int yPix = 0;
-    bool skip = false;
-    for(int y = 1; y < 11; y++){
-        int length;
-        if(y <= 6){
-            length = 22;
-        }else{
-            length = 28;
-        }
-        for(int i = 1; i < length; i++){
-            int startX1, startX2, startY1, startY2;
-
-            int currentX1, currentX2, currentY1, currentY2;
-
-            xPix = i -1;
-            yPix = y -1;
-            if(yPix <= 6){
-                startX1 = xMin + (40 * 3) + 10;
-                startX2 = xMin + (40 * 3) + 10 + 20;
-                startY1 = yMin + 10;
-                startY2 = yMin + 10;
-            }else{
-                startX1 = xMin + 10;
-                startX2 = xMin + 10 + 20;
-                startY1 = yMin + 10;
-                startY2 = yMin + 10;
-            }
-
-            if(y % 2 == 0) {
-                if((i == 21 && length == 22) || (i == 27 && length == 28)){
-                    skip = true;
-                }else{
-                    currentX1 = startX1 + (40*xPix) + 20;
-                    currentX2 = startX2 + (40*xPix) + 20;
-
-                    currentY1 = startY1 + (20*yPix);
-                    currentY2 = startY2 + (20*yPix);
-                    skip = false;
-                }
-            }else{ // is an odd line
-                if((i != 21 && length == 22) || (i != 27 && length == 28)){
-                    currentX1 = startX1 + (40*xPix);
-                    currentX2 = startX2 + (40*xPix);
-
-                    currentY1 = startY1 + (20*yPix);
-                    currentY2 = startY2 + (20*yPix);
-                    skip = false;
-                }else{
-                    currentX1 = startX1 + (40*20);
-                    currentX2 = startX1;
-
-                    currentY1 = startY1 + (20*yPix);
-                    currentY2 = startY2 + (20*(yPix+1));
-                    skip = false;
-                }
-            }
-
-            if(!skip){
-                unsigned char temp = 0;
-                if(MpixelR(rgbFiltered, currentX1, currentY1) >= 220){
-                    temp = temp | (1<<5);
-                }
-                if((int)MpixelG(rgbFiltered, currentX1, currentY1) >= 220){
-                    temp = temp | (1<<4);
-                }
-                if((int)MpixelB(rgbFiltered, currentX1, currentY1) >= 220){
-                    temp = temp | (1<<3);
-                }
-                if((int)MpixelR(rgbFiltered, currentX2, currentY2) >= 220){
-                    temp = temp | (1<<2);
-                }
-                if((int)MpixelG(rgbFiltered, currentX2, currentY2) >= 220){
-                    temp = temp | (1<<1);
-                }
-                if((int)MpixelB(rgbFiltered, currentX2, currentY2) >= 220){
-                    temp = temp | (1);
-                }
-                cout << encodingarray[(unsigned int)temp];
-            }
-        }
-    }
-    cout << endl;
+    //vector<Vec2f> lines;
+    //HoughLines(grid, lines, 0.55, CV_PI/180, 600, 0, 0);
+//
+//    int xCount = 0;
+//    int yCount = 0;
+//    double xMin = 1000.0, xMax = -1000.0, yMin = 1000.0, yMax = -1000.0;
+//
+//    for(vector<Vec2f>::iterator ln = lines.begin(); ln != lines.end(); ln++){
+//
+//
+//        float rho = (*ln)[0], theta = (*ln)[1];
+//        Point pt1, pt2;
+//        double a = cos(theta), b = sin(theta);
+//        double x0 = a*rho, y0 = b*rho;
+//        pt1.x = cvRound(x0 + 1000*(-b));
+//        pt1.y = cvRound(y0 + 1000*(a));
+//        pt2.x = cvRound(x0 - 1000*(-b));
+//        pt2.y = cvRound(y0 - 1000*(a));
+//
+//        double angle = abs(atan2(pt2.y - pt1.y, pt2.x - pt1.x)* 180/CV_PI);
+//        if(angle == 0){
+//            line(rgb, pt1, pt2, Scalar(0,0, 255), 2);
+//            yCount++;
+//            if(pt1.y >= yMax){
+//                yMax = pt1.y;
+//            }else if(pt1.y <= yMin){
+//                yMin = pt1.y;
+//            }
+//        }else if(angle == 90){
+//            line(rgb, pt1, pt2, Scalar(0,0, 255), 2);
+//            xCount++;
+//            if(pt1.x >= xMax){
+//                xMax = pt1.x;
+//            }else if(pt1.x <= xMin){
+//                xMin = pt1.x;
+//            }
+//        }else{
+//            lines.erase(ln);
+//        }
+//    }
+//
+//
+//    //----------------------------------------------------------------------
+//    //Simplified way of reading file
+//
+//    int gridDist = ((yMax - yMin) / (yCount)) * 1;
+//    int xPix = 0;
+//    int yPix = 0;
+//    bool skip = false;
+//    for(int y = 1; y < 11; y++){
+//        int length;
+//        if(y <= 6){
+//            length = 22;
+//        }else{
+//            length = 28;
+//        }
+//        for(int i = 1; i < length; i++){
+//            int startX1, startX2, startY1, startY2;
+//
+//            int currentX1, currentX2, currentY1, currentY2;
+//
+//            xPix = i -1;
+//            yPix = y -1;
+//            if(yPix <= 6){
+//                startX1 = xMin + (40 * 3) + 10;
+//                startX2 = xMin + (40 * 3) + 10 + 20;
+//                startY1 = yMin + 10;
+//                startY2 = yMin + 10;
+//            }else{
+//                startX1 = xMin + 10;
+//                startX2 = xMin + 10 + 20;
+//                startY1 = yMin + 10;
+//                startY2 = yMin + 10;
+//            }
+//
+//            if(y % 2 == 0) {
+//                if((i == 21 && length == 22) || (i == 27 && length == 28)){
+//                    skip = true;
+//                }else{
+//                    currentX1 = startX1 + (40*xPix) + 20;
+//                    currentX2 = startX2 + (40*xPix) + 20;
+//
+//                    currentY1 = startY1 + (20*yPix);
+//                    currentY2 = startY2 + (20*yPix);
+//                    skip = false;
+//                }
+//            }else{ // is an odd line
+//                if((i != 21 && length == 22) || (i != 27 && length == 28)){
+//                    currentX1 = startX1 + (40*xPix);
+//                    currentX2 = startX2 + (40*xPix);
+//
+//                    currentY1 = startY1 + (20*yPix);
+//                    currentY2 = startY2 + (20*yPix);
+//                    skip = false;
+//                }else{
+//                    currentX1 = startX1 + (40*20);
+//                    currentX2 = startX1;
+//
+//                    currentY1 = startY1 + (20*yPix);
+//                    currentY2 = startY2 + (20*(yPix+1));
+//                    skip = false;
+//                }
+//            }
+//
+//            if(!skip){
+//                unsigned char temp = 0;
+//                if(MpixelR(rgbFiltered, currentX1, currentY1) >= 220){
+//                    temp = temp | (1<<5);
+//                }
+//                if((int)MpixelG(rgbFiltered, currentX1, currentY1) >= 220){
+//                    temp = temp | (1<<4);
+//                }
+//                if((int)MpixelB(rgbFiltered, currentX1, currentY1) >= 220){
+//                    temp = temp | (1<<3);
+//                }
+//                if((int)MpixelR(rgbFiltered, currentX2, currentY2) >= 220){
+//                    temp = temp | (1<<2);
+//                }
+//                if((int)MpixelG(rgbFiltered, currentX2, currentY2) >= 220){
+//                    temp = temp | (1<<1);
+//                }
+//                if((int)MpixelB(rgbFiltered, currentX2, currentY2) >= 220){
+//                    temp = temp | (1);
+//                }
+//                cout << encodingarray[(unsigned int)temp];
+//            }
+//        }
+//    }
+//    cout << endl;
 
 
 
 
 
     imshow("Original", rgb);
-    imshow("Filtered", rgbFiltered);
+    imshow("Filtered", grid);
 
     waitKey(0);
     return 0;

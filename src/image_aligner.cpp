@@ -1,12 +1,11 @@
 #include "image_aligner.h"
 
-image_aligner::image_aligner(Mat & greySrc)
+image_aligner::image_aligner()
 {
     cannyThresh = 200;
     centerThresh = 80;
     minRadius = 20;
     maxRadius = 60;
-    findCircles(greySrc);
 }
 
 image_aligner::~image_aligner()
@@ -30,7 +29,6 @@ void image_aligner::drawCircles(Mat& rgbSrc){
     for(size_t i = 0; i < circles.size(); i++){
         Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
         int radius = cvRound(circles[i][2]);
-
         circle(rgbSrc, center, 3, Scalar(0,255,0), -1, 8, 0);
 
         circle(rgbSrc, center, radius, Scalar(0,0,255), 3, 8, 0);
@@ -39,4 +37,17 @@ void image_aligner::drawCircles(Mat& rgbSrc){
 
 vector<Vec3f> image_aligner::getCircles(){
     return circles;
+}
+
+
+void image_aligner::findGrid(Mat &greySrc){
+
+}
+
+void image_aligner::drawGrid(Mat& rgbSrc){
+
+}
+
+vector<Vec2f> image_aligner::getGrid(){
+
 }

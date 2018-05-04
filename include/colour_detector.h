@@ -21,8 +21,9 @@ const Scalar rangeBlue[2] =       {Scalar(110, 50, 50), Scalar(130, 255,255)};
 const Scalar rangeCyan[2] =       {Scalar(85, 50, 50), Scalar(110, 255,255)};
 const Scalar rangeMagenta[2] =    {Scalar(140, 50, 50), Scalar(160, 255,255)};
 const Scalar rangeYellow[2] =     {Scalar(30, 50, 50), Scalar(50, 255,255)};
-const Scalar rangeBlack[2] =      {Scalar(0, 0, 0), Scalar(255, 255,170)};
+const Scalar rangeGrid[2] =      {Scalar(0, 0, 0), Scalar(255, 255,170)};
 const Scalar rangeWhite[2] =      {Scalar(0, 0, 240), Scalar(255, 50,255)};
+const Scalar rangeBlack[2] =      {Scalar(0, 0, 0), Scalar(255, 255, 20)};
 
 class colour_detector
 {
@@ -32,7 +33,8 @@ class colour_detector
         void isBlue(Mat &hsvinput, Mat &bgroutput);
         void makeRGB(Mat &inRGB, Mat &outRGB);
 
-	void getGrid(Mat &rgbinput, Mat &bgroutput);
+        void getGrid(Mat &rgbinput, Mat &bgroutput);
+        void getCircles(Mat &bgrInput, Mat&greyOutput);
 
     protected:
 

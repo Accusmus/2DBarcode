@@ -13,21 +13,28 @@ using namespace cv;
 class image_aligner
 {
     public:
-        image_aligner(Mat & greySrc);
+        image_aligner();
         virtual ~image_aligner();
-        void drawCircles(Mat& rgbSrc);
+
+        void findCircles(Mat &greySrc);
         vector<Vec3f> getCircles();
+        void drawCircles(Mat& rgbSrc);
+
+        vector<Vec2f> getGrid();
+        void drawGrid(Mat& rgbSrc);
+        void findGrid(Mat &greySrc);
+
+
     protected:
 
     private:
         vector<Vec3f> circles;
+        vector<Vec2f> grid;
+
         int cannyThresh;
         int centerThresh;
         int minRadius;
         int maxRadius;
-
-
-        void findCircles(Mat &greySrc);
 };
 
 #endif // IMAGE_ALIGNER_H

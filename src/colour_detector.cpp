@@ -35,6 +35,17 @@ void colour_detector::getGrid(Mat &bgrinput, Mat &bgroutput){
     bgroutput = mask;
 }
 
+void colour_detector::getCircles(Mat &bgrInput, Mat&bgrOutput){
+    hsv.create(bgrInput.size(), CV_8UC3);
+    mask.create(bgrInput.size(), CV_8UC1);
+
+    cvtColor(bgrInput, hsv, COLOR_BGR2HSV);
+
+    inRange(hsv, rangeBlue[0], rangeBlue[1], mask);
+
+    bgrOutput = mask;
+}
+
 void colour_detector::makeRGB(Mat &inRGB, Mat &outRGB){
     hsv.create(inRGB.size(), CV_8UC3);
     mask.create(inRGB.size(), CV_8UC1);
