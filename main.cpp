@@ -35,7 +35,7 @@ const char encodingarray[64]={' ','a','b','c','d','e','f','g','h','i','j','k','l
 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','X','Y','W','Z',
 '0','1','2','3','4','5','6','7','8','9','.'};
 
-void convertRGBtoHSV(Mat &imgBGR, Mat &imgHSV);
+string decode2DBarCode(double xMin, double yMin, Mat &rgbImg);
 int main()
 {
     Mat rgb;
@@ -59,6 +59,7 @@ int main()
         exit(1);
     }
 
+
     //creates RGB filtered image that is clearer for easy reading for decoding message
     //in the process is converted to hsv and then calculates a better RGB equivilant
     colourDet.makeRGB(rgb, rgbFiltered);
@@ -74,10 +75,24 @@ int main()
     align.findGrid(grid);
     align.drawGrid(rgb);
 
+    cout << decode2DBarCode(align.getxMin(), align.getyMin(), rgbFiltered) << endl;
+
    //----------------------------------------------------------------------
    //Simplified way of reading file
 
-    //int gridDist = ((yMax - yMin) / ()) * 1;
+
+
+
+
+    imshow("Original", rgb);
+    imshow("Filtered", rgbFiltered);
+
+    waitKey(0);
+    return 0;
+}
+
+string decode2DBarCode(double xMin, double yMin, Mat &rgbImg){
+    string decodedMsg;
     int xPix = 0;
     int yPix = 0;
     bool skip = false;
@@ -96,15 +111,15 @@ int main()
             xPix = i -1;
             yPix = y -1;
             if(yPix <= 6){
-                startX1 = align.getxMin() + (40 * 3) + 10;
-                startX2 = align.getxMin() + (40 * 3) + 10 + 20;
-                startY1 = align.getyMin() + 10;
-                startY2 = align.getyMin() + 10;
+                startX1 = xMin + (40 * 3) + 10;
+                startX2 = xMin + (40 * 3) + 10 + 20;
+                startY1 = yMin + 10;
+                startY2 = yMin + 10;
             }else{
-                startX1 = align.getxMin() + 10;
-                startX2 = align.getxMin() + 10 + 20;
-                startY1 = align.getyMin() + 10;
-                startY2 = align.getyMin() + 10;
+                startX1 = xMin + 10;
+                startX2 = xMin + 10 + 20;
+                startY1 = yMin + 10;
+                startY2 = yMin + 10;
             }
 
             if(y % 2 == 0) {
@@ -138,37 +153,27 @@ int main()
 
             if(!skip){
                 unsigned char temp = 0;
-                if(MpixelR(rgbFiltered, currentX1, currentY1) >= 220){
+                if(MpixelR(rgbImg, currentX1, currentY1) >= 220){
                     temp = temp | (1<<5);
                 }
-                if((int)MpixelG(rgbFiltered, currentX1, currentY1) >= 220){
+                if((int)MpixelG(rgbImg, currentX1, currentY1) >= 220){
                     temp = temp | (1<<4);
                 }
-                if((int)MpixelB(rgbFiltered, currentX1, currentY1) >= 220){
+                if((int)MpixelB(rgbImg, currentX1, currentY1) >= 220){
                     temp = temp | (1<<3);
                 }
-                if((int)MpixelR(rgbFiltered, currentX2, currentY2) >= 220){
+                if((int)MpixelR(rgbImg, currentX2, currentY2) >= 220){
                     temp = temp | (1<<2);
                 }
-                if((int)MpixelG(rgbFiltered, currentX2, currentY2) >= 220){
+                if((int)MpixelG(rgbImg, currentX2, currentY2) >= 220){
                     temp = temp | (1<<1);
                 }
-                if((int)MpixelB(rgbFiltered, currentX2, currentY2) >= 220){
+                if((int)MpixelB(rgbImg, currentX2, currentY2) >= 220){
                     temp = temp | (1);
                 }
-                cout << encodingarray[(unsigned int)temp];
+                decodedMsg += encodingarray[(unsigned int)temp];
             }
         }
     }
-    cout << endl;
-
-
-
-
-
-    imshow("Original", rgb);
-    imshow("Filtered", rgbFiltered);
-
-    waitKey(0);
-    return 0;
+    return decodedMsg;
 }
