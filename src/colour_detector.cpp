@@ -30,7 +30,7 @@ void colour_detector::getGrid(Mat &bgrinput, Mat &bgroutput){
 
     cvtColor(bgrinput, hsv, COLOR_BGR2HSV);
 
-    inRange(hsv, rangeBlack[0], rangeBlack[1], mask);
+    inRange(hsv, rangeGrid[0], rangeGrid[1], mask);
 
     bgroutput = mask;
 }
