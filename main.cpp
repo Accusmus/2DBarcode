@@ -39,19 +39,21 @@ string decode2DBarCode(double xMin, double xMax, double yMin, double yMax, Mat &
 int main()
 {
     Mat rgb;
-    Mat res;
     Mat grid;
-    Mat blue;
     Mat rgbFiltered;
+    Mat transformed;
 
     namedWindow("Original", 0);
     namedWindow("Filtered", 0);
+    namedWindow("Transform", 0);
 
     resizeWindow("Original", 500, 500);
     resizeWindow("Filtered", 500, 500);
+    resizeWindow("Transform", 500, 500);
 
-    colour_detector colourDet;
-    colourDet = colour_detector();
+    colour_detector colourDet = colour_detector();
+
+    image_aligner align = image_aligner();
 
     rgb = imread(imgPaths[13], 1);
     if(rgb.data == NULL){
@@ -66,7 +68,6 @@ int main()
 
     colourDet.getCircles(rgb, grid);
 
-    image_aligner align = image_aligner();
     align.findCircles(grid);
     align.drawCircles(rgb);
 
@@ -75,7 +76,8 @@ int main()
     align.findGrid(grid);
     align.drawGrid(rgb);
 
-    cout << decode2DBarCode(align.getxMin(), align.getxMax(), align.getyMin(), align.getyMax(), rgbFiltered) << endl;
+    string decodedMsg = decode2DBarCode(align.getxMin(), align.getxMax(), align.getyMin(), align.getyMax(), rgbFiltered);
+    cout << decodedMsg << endl;
 
    //----------------------------------------------------------------------
    //Simplified way of reading file
@@ -86,6 +88,7 @@ int main()
     waitKey(0);
     return 0;
 }
+
 
 string decode2DBarCode(double xMin, double xMax, double yMin, double yMax, Mat &rgbImg){
     int maxColumnsNum = 48;
