@@ -35,7 +35,7 @@ const char encodingarray[64]={' ','a','b','c','d','e','f','g','h','i','j','k','l
 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','X','Y','W','Z',
 '0','1','2','3','4','5','6','7','8','9','.'};
 
-string decode2DBarCode(double xMin, double yMin, Mat &rgbImg);
+string decode2DBarCode(double xMin, double xMax, double yMin, double yMax, Mat &rgbImg);
 int main()
 {
     Mat rgb;
@@ -75,7 +75,7 @@ int main()
     align.findGrid(grid);
     align.drawGrid(rgb);
 
-    cout << decode2DBarCode(align.getxMin(), align.getyMin(), rgbFiltered) << endl;
+    cout << decode2DBarCode(align.getxMin(), align.getxMax(), align.getyMin(), align.getyMax(), rgbFiltered) << endl;
 
    //----------------------------------------------------------------------
    //Simplified way of reading file
@@ -91,62 +91,71 @@ int main()
     return 0;
 }
 
-string decode2DBarCode(double xMin, double yMin, Mat &rgbImg){
+string decode2DBarCode(double xMin, double xMax, double yMin, double yMax, Mat &rgbImg){
+    int maxColumnsNum = 48;
+    int maxRowNum = 48;
     string decodedMsg;
-    int xPix = 0;
-    int yPix = 0;
+
+    int colSizeX = round((xMax - xMin)/48);
+    int colSizeY = round((yMax - yMin)/48);
+    int centerX = colSizeX / 2;
+    int centerY = colSizeY / 2;
+
     bool skip = false;
-    for(int y = 1; y < 11; y++){
+    for(int y = 1; y < maxRowNum; y++){
         int length;
         if(y <= 6){
             length = 22;
         }else{
-            length = 28;
+            length = 25;
         }
-        for(int i = 1; i < length; i++){
+        for(int x = 1; x < length; x++){
             int startX1, startX2, startY1, startY2;
 
             int currentX1, currentX2, currentY1, currentY2;
 
-            xPix = i -1;
-            yPix = y -1;
-            if(yPix <= 6){
-                startX1 = xMin + (40 * 3) + 10;
-                startX2 = xMin + (40 * 3) + 10 + 20;
-                startY1 = yMin + 10;
-                startY2 = yMin + 10;
+            // sent points for where to start reading colour data
+            // there is an x and y point for each colour
+            // 2 colours make up 1 character
+            if((y - 1) <= 5){
+                //offset x by 6 colours because of circle identifiers
+                startX1 = xMin + ((colSizeX * 2) * 3) + centerX;
+                startX2 = xMin + ((colSizeX * 2) * 3) + centerX + colSizeX;
+                startY1 = yMin + centerY;
+                startY2 = yMin + centerY;
             }else{
-                startX1 = xMin + 10;
-                startX2 = xMin + 10 + 20;
-                startY1 = yMin + 10;
-                startY2 = yMin + 10;
+                startX1 = xMin + (colSizeX * 2) + centerX;
+                startX2 = xMin + (colSizeX * 2) + centerX + colSizeX;
+                startY1 = yMin + centerY;
+                startY2 = yMin + centerY;
             }
 
-            if(y % 2 == 0) {
-                if((i == 21 && length == 22) || (i == 27 && length == 28)){
+            // each line has an odd number of colours
+            if(y % 2 == 0) { //is an even line
+                if((x == 21 && length == 22) || (x == 24 && length == 25)){
                     skip = true;
                 }else{
-                    currentX1 = startX1 + (40*xPix) + 20;
-                    currentX2 = startX2 + (40*xPix) + 20;
+                    currentX1 = startX1 + ((colSizeX *2)*(x-1)) + 20;
+                    currentX2 = startX2 + ((colSizeX *2)*(x-1)) + 20;
 
-                    currentY1 = startY1 + (20*yPix);
-                    currentY2 = startY2 + (20*yPix);
+                    currentY1 = startY1 + ((colSizeY)*(y-1));
+                    currentY2 = startY2 + ((colSizeY)*(y-1));
                     skip = false;
                 }
             }else{ // is an odd line
-                if((i != 21 && length == 22) || (i != 27 && length == 28)){
-                    currentX1 = startX1 + (40*xPix);
-                    currentX2 = startX2 + (40*xPix);
+                if((x != 21 && length == 22) || (x != 24 && length == 25)){
+                    currentX1 = startX1 + ((colSizeX *2)*(x-1));
+                    currentX2 = startX2 + ((colSizeX *2)*(x-1));
 
-                    currentY1 = startY1 + (20*yPix);
-                    currentY2 = startY2 + (20*yPix);
+                    currentY1 = startY1 + ((colSizeY)*(y-1));
+                    currentY2 = startY2 + ((colSizeY)*(y-1));
                     skip = false;
                 }else{
                     currentX1 = startX1 + (40*20);
                     currentX2 = startX1;
 
-                    currentY1 = startY1 + (20*yPix);
-                    currentY2 = startY2 + (20*(yPix+1));
+                    currentY1 = startY1 + ((colSizeY)*(y-1));
+                    currentY2 = startY2 + ((colSizeY)*y);
                     skip = false;
                 }
             }
@@ -174,6 +183,7 @@ string decode2DBarCode(double xMin, double yMin, Mat &rgbImg){
                 decodedMsg += encodingarray[(unsigned int)temp];
             }
         }
+        //decodedMsg += "\n";
     }
     return decodedMsg;
 }
