@@ -31,8 +31,8 @@ const string imgPaths[17] =
 "res/farfaraway_scaled.jpg"
 };
 
-const char encodingarray[64]={' ','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','x','y','w','z',
-'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','X','Y','W','Z',
+const char encodingarray[64]={' ','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
+'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
 '0','1','2','3','4','5','6','7','8','9','.'};
 
 string decode2DBarCode(double xMin, double xMax, double yMin, double yMax, Mat &rgbImg);
@@ -53,7 +53,7 @@ int main()
     colour_detector colourDet;
     colourDet = colour_detector();
 
-    rgb = imread(imgPaths[1], 1);
+    rgb = imread(imgPaths[13], 1);
     if(rgb.data == NULL){
         cout << "Error: File could not be read" << endl;
         exit(1);
@@ -80,10 +80,6 @@ int main()
    //----------------------------------------------------------------------
    //Simplified way of reading file
 
-
-
-
-
     imshow("Original", rgb);
     imshow("Filtered", rgbFiltered);
 
@@ -106,6 +102,8 @@ string decode2DBarCode(double xMin, double xMax, double yMin, double yMax, Mat &
         int length;
         if(y <= 6){
             length = 22;
+        }else if(y >= 42){
+            cout << "y = " << y << endl;
         }else{
             length = 25;
         }
@@ -117,22 +115,23 @@ string decode2DBarCode(double xMin, double xMax, double yMin, double yMax, Mat &
             // sent points for where to start reading colour data
             // there is an x and y point for each colour
             // 2 colours make up 1 character
-            if((y - 1) <= 5){
+            if(y <= 6){
                 //offset x by 6 colours because of circle identifiers
                 startX1 = xMin + ((colSizeX * 2) * 3) + centerX;
                 startX2 = xMin + ((colSizeX * 2) * 3) + centerX + colSizeX;
-                startY1 = yMin + centerY;
-                startY2 = yMin + centerY;
+            }else if(y >= 42){
+                startX1 = xMin + ((colSizeX * 2) * 3) + centerX;
+                startX2 = xMin + ((colSizeX * 2) * 3) + centerX + colSizeX;
             }else{
                 startX1 = xMin + (colSizeX * 2) + centerX;
                 startX2 = xMin + (colSizeX * 2) + centerX + colSizeX;
-                startY1 = yMin + centerY;
-                startY2 = yMin + centerY;
             }
+            startY1 = yMin + centerY;
+            startY2 = yMin + centerY;
 
             // each line has an odd number of colours
             if(y % 2 == 0) { //is an even line
-                if((x == 21 && length == 22) || (x == 24 && length == 25)){
+                if((x == 21 && length == 22) || ((x == 24) && (y > 5)) || ((x > 17) && (y >=42))){ //(x == 24 && length == 25) ||
                     skip = true;
                 }else{
                     currentX1 = startX1 + ((colSizeX *2)*(x-1)) + 20;
@@ -143,7 +142,9 @@ string decode2DBarCode(double xMin, double xMax, double yMin, double yMax, Mat &
                     skip = false;
                 }
             }else{ // is an odd line
-                if((x != 21 && length == 22) || (x != 24 && length == 25)){
+                if(((x > 18) && (y >=42))){
+                    skip = true;
+                }else if((x != 21 && length == 22) || (x != 24 && length == 25)){
                     currentX1 = startX1 + ((colSizeX *2)*(x-1));
                     currentX2 = startX2 + ((colSizeX *2)*(x-1));
 
@@ -183,7 +184,6 @@ string decode2DBarCode(double xMin, double xMax, double yMin, double yMax, Mat &
                 decodedMsg += encodingarray[(unsigned int)temp];
             }
         }
-        //decodedMsg += "\n";
     }
     return decodedMsg;
 }
