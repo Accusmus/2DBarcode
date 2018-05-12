@@ -7,13 +7,10 @@ image_aligner::image_aligner()
     minRadius = 20;
     maxRadius = 60;
 
-    xMin = 10000.0;
-    xMax = -10000.0;
-    yMin = 10000.0;
-    yMax = -10000.0;
-
     rotMat = Mat(2, 3, CV_32FC1);
     warpMat = Mat(2, 3, CV_32FC1);
+
+    angleToRotate = -500;
 }
 
 image_aligner::~image_aligner()
@@ -44,7 +41,6 @@ void image_aligner::drawCircles(Mat& rgbSrc){
         Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
         int radius = cvRound(circles[i][2]);
         circle(rgbSrc, center, 3, Scalar(0,255,0), -1, 8, 0);
-
         circle(rgbSrc, center, radius, Scalar(0,0,255), 3, 8, 0);
     }
 }
@@ -111,6 +107,9 @@ void image_aligner::findGrid(Mat &greySrc){
             angForRot = gridAngles[i];
         }
     }
+    cout << "Rotation angle is: " << angForRot  << " Degrees" << endl;
+    if(abs(angForRot) == 90 || abs(angForRot) == -90) angForRot = 0;
+    angleToRotate = angForRot;
 }
 
 void image_aligner::drawGrid(Mat& rgbSrc){
@@ -130,21 +129,32 @@ void image_aligner::drawGrid(Mat& rgbSrc){
 
 void image_aligner::applyRotationTransform(Mat &src, Mat &dest){
 
-    Point2f srcTri[3];
-    Point2f dstTri[3];
+    // check if angle has been calculated
+    if(angleToRotate == -500){
+        cout << "Error: you have not called find grid function to set angle" << endl;
+        return;
+    }
 
-    dstTri[0] = Point2f(87.5,88.5);
-    dstTri[1] = Point2f(87.5, 909.5);
-    dstTri[2] = Point2f(908.5, 909.5);
+    //first rotation is to get it so that it is rotated with 90 degrees
+    Point2f center(src.cols/2, src.rows/2);
+    Mat r = getRotationMatrix2D(center, -angleToRotate, 1.0);
+    warpAffine(src, dest, r, src.size());
 
-    srcTri[0] = Point2f(87.5, 88.5);
-    srcTri[1] = Point2f(87.5, 909.5);
-    srcTri[2] = Point2f(908.5, 909.5);
-
-
-    warpMat = getAffineTransform(srcTri, dstTri);
-
-    warpAffine(src, dest, warpMat, dest.size());
+//    Point2f srcTri[3];
+//    Point2f dstTri[3];
+//
+//    dstTri[0] = Point2f(87.5,88.5);
+//    dstTri[1] = Point2f(87.5, 909.5);
+//    dstTri[2] = Point2f(908.5, 909.5);
+//
+//    srcTri[0] = Point2f(87.5, 88.5);
+//    srcTri[1] = Point2f(87.5, 909.5);
+//    srcTri[2] = Point2f(908.5, 909.5);
+//
+//
+//    warpMat = getAffineTransform(srcTri, dstTri);
+//
+//    warpAffine(src, dest, warpMat, dest.size());
 
 }
 

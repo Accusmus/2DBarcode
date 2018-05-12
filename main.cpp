@@ -55,7 +55,7 @@ int main()
 
     image_aligner align = image_aligner();
 
-    rgb = imread(imgPaths[2], 1);
+    rgb = imread(imgPaths[9], 1);
     if(rgb.data == NULL){
         cout << "Error: File could not be read" << endl;
         exit(1);
@@ -69,18 +69,19 @@ int main()
     align.findCircles(grid);
     align.drawCircles(rgb);
 
-    transformed.create(rgb.size(), CV_8UC3);
-    align.applyRotationTransform(rgb, transformed);
-
     colourDet.getGrid(rgb, grid);
 
     align.findGrid(grid);
-    align.drawGrid(rgb);
+
+    transformed.create(rgb.size(), CV_8UC3);
+    align.applyRotationTransform(rgb, transformed);
 
     colourDet.makeRGB(transformed, rgbFiltered);
 
     string decodedMsg = decode2DBarCode(rgbFiltered);
     cout << decodedMsg << endl;
+
+    align.drawGrid(rgb);
 
    //----------------------------------------------------------------------
    //Simplified way of reading file

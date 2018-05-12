@@ -27,11 +27,6 @@ class image_aligner
         void applyRotationTransform(Mat &src, Mat &dest);
         void applyScaleTransform(Mat &src, Mat &dest);
 
-        double getxMin();
-        double getxMax();
-        double getyMin();
-        double getyMax();
-
     protected:
 
     private:
@@ -50,9 +45,7 @@ class image_aligner
         int minRadius;
         int maxRadius;
 
-        //parameters given by grid identification
-        double xMin, xMax;
-        double yMin, yMax;
+        int angleToRotate;
 };
 
 #endif // IMAGE_ALIGNER_H
