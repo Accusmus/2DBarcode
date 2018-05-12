@@ -56,6 +56,8 @@ void image_aligner::drawCircles(Mat& rgbSrc){
 void image_aligner::findGrid(Mat &greySrc){
     Mat grey;
     grey.create(greySrc.size(), CV_8UC1);
+    vector<int> gridAngles = vector<int>();
+    vector<int> gridAngCount = vector<int>();
 
     threshold(greySrc, grey, 0, 255, CV_THRESH_BINARY);
 
@@ -76,25 +78,37 @@ void image_aligner::findGrid(Mat &greySrc){
         pt2.x = cvRound(x0 - 1000*(-b));
         pt2.y = cvRound(y0 - 1000*(a));
 
-        double angle = abs(atan2(pt2.y - pt1.y, pt2.x - pt1.x)* 180/CV_PI);
-        if(angle == 0){
-            //line(rgb, pt1, pt2, Scalar(0,0, 255), 2);
-            yCount++;
-            if(pt1.y >= yMax){
-                yMax = pt1.y;
-            }else if(pt1.y <= yMin){
-                yMin = pt1.y;
-            }
-        }else if(angle == 90){
-            //line(rgb, pt1, pt2, Scalar(0,0, 255), 2);
-            xCount++;
-            if(pt1.x >= xMax){
-                xMax = pt1.x;
-            }else if(pt1.x <= xMin){
-                xMin = pt1.x;
-            }
+        double angle = atan2(pt2.y - pt1.y, pt2.x - pt1.x)* 180/CV_PI;
+
+        //find the prominant angle to find out how much to rotate
+        //gridAngle is a vector of the different angles of the grid
+        //gridAngCount is a vector of the count of each angle
+        //both share the same index
+        if(gridAngles.size() == 0){
+            gridAngles.push_back(angle);
+            gridAngCount.push_back(1);
         }else{
-            grid.erase(ln);
+            int ang = -1;
+            //check if it is existing
+            for(int i = 0; i < gridAngles.size(); i++){
+                if(gridAngles[i] == angle){
+                    ang = i;
+                }
+            }
+            if(ang != -1){
+                gridAngCount[ang] ++;
+            }else{
+                gridAngles.push_back(angle);
+                gridAngCount.push_back(1);
+            }
+        }
+    }
+    int maxCount = -10000;
+    int angForRot = 0;
+    for(int i = 0; i < gridAngCount.size(); i++){
+        if(gridAngCount[i] >= maxCount){
+            maxCount = gridAngCount[i];
+            angForRot = gridAngles[i];
         }
     }
 }
@@ -115,12 +129,28 @@ void image_aligner::drawGrid(Mat& rgbSrc){
 }
 
 void image_aligner::applyRotationTransform(Mat &src, Mat &dest){
-    cout << "not implemented yet" << endl;
-    warpDst.create(src.size(), CV_8UC3);
 
+    Point2f srcTri[3];
+    Point2f dstTri[3];
+
+    dstTri[0] = Point2f(87.5,88.5);
+    dstTri[1] = Point2f(87.5, 909.5);
+    dstTri[2] = Point2f(908.5, 909.5);
+
+    srcTri[0] = Point2f(87.5, 88.5);
+    srcTri[1] = Point2f(87.5, 909.5);
+    srcTri[2] = Point2f(908.5, 909.5);
+
+
+    warpMat = getAffineTransform(srcTri, dstTri);
+
+    warpAffine(src, dest, warpMat, dest.size());
 
 }
 
+void image_aligner::applyScaleTransform(Mat &src, Mat &dest){
+    cout << "scale transform not implemented yet" << endl;
+}
 
 //Getter Methods
 vector<Vec3f> image_aligner::getCircles(){
@@ -129,20 +159,4 @@ vector<Vec3f> image_aligner::getCircles(){
 
 vector<Vec2f> image_aligner::getGrid(){
     return grid;
-}
-
-double image_aligner::getxMin(){
-    return xMin;
-}
-
-double image_aligner::getxMax(){
-    return xMax;
-}
-
-double image_aligner::getyMin(){
-    return yMin;
-}
-
-double image_aligner::getyMax(){
-    return yMax;
 }

@@ -35,7 +35,7 @@ const char encodingarray[64]={' ','a','b','c','d','e','f','g','h','i','j','k','l
 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
 '0','1','2','3','4','5','6','7','8','9','.'};
 
-string decode2DBarCode(double xMin, double xMax, double yMin, double yMax, Mat &rgbImg);
+string decode2DBarCode(Mat &rgbImg);
 int main()
 {
     Mat rgb;
@@ -55,28 +55,31 @@ int main()
 
     image_aligner align = image_aligner();
 
-    rgb = imread(imgPaths[13], 1);
+    rgb = imread(imgPaths[2], 1);
     if(rgb.data == NULL){
         cout << "Error: File could not be read" << endl;
         exit(1);
     }
 
-
     //creates RGB filtered image that is clearer for easy reading for decoding message
     //in the process is converted to hsv and then calculates a better RGB equivilant
-    colourDet.makeRGB(rgb, rgbFiltered);
 
     colourDet.getCircles(rgb, grid);
 
     align.findCircles(grid);
     align.drawCircles(rgb);
 
+    transformed.create(rgb.size(), CV_8UC3);
+    align.applyRotationTransform(rgb, transformed);
+
     colourDet.getGrid(rgb, grid);
 
     align.findGrid(grid);
     align.drawGrid(rgb);
 
-    string decodedMsg = decode2DBarCode(align.getxMin(), align.getxMax(), align.getyMin(), align.getyMax(), rgbFiltered);
+    colourDet.makeRGB(transformed, rgbFiltered);
+
+    string decodedMsg = decode2DBarCode(rgbFiltered);
     cout << decodedMsg << endl;
 
    //----------------------------------------------------------------------
@@ -84,19 +87,23 @@ int main()
 
     imshow("Original", rgb);
     imshow("Filtered", rgbFiltered);
+    imshow("Transform", transformed);
 
     waitKey(0);
     return 0;
 }
 
 
-string decode2DBarCode(double xMin, double xMax, double yMin, double yMax, Mat &rgbImg){
+string decode2DBarCode(Mat &rgbImg){
     int maxColumnsNum = 48;
     int maxRowNum = 48;
+
+    int xMin = 29, xMax = 969, yMin = 29, yMax = 969;
+
     string decodedMsg;
 
-    int colSizeX = round((xMax - xMin)/48);
-    int colSizeY = round((yMax - yMin)/48);
+    int colSizeX = 20;
+    int colSizeY = 20;
     int centerX = colSizeX / 2;
     int centerY = colSizeY / 2;
 
@@ -105,8 +112,6 @@ string decode2DBarCode(double xMin, double xMax, double yMin, double yMax, Mat &
         int length;
         if(y <= 6){
             length = 22;
-        }else if(y >= 42){
-            cout << "y = " << y << endl;
         }else{
             length = 25;
         }

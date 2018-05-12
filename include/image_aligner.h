@@ -25,6 +25,7 @@ class image_aligner
         void findGrid(Mat &greySrc);
 
         void applyRotationTransform(Mat &src, Mat &dest);
+        void applyScaleTransform(Mat &src, Mat &dest);
 
         double getxMin();
         double getxMax();
