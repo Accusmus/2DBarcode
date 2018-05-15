@@ -17,6 +17,25 @@ using namespace cv;
 #define MpixelG(image, x, y) ((uchar *) (((image).data) + (y)*((image).step)))[(x)*((image).channels())+1]
 #define MpixelR(image, x, y) ((uchar *) (((image).data) + (y)*((image).step)))[(x)*((image).channels())+2]
 
+enum {
+    EMPTY2D         = 0,
+    ABCDE           = 1,
+    ABCDE_ROT       = 2,
+    ABCDE_ROT_SCA   = 3,
+    ABCDE_SCA       = 4,
+    CONGRAT         = 5,
+    CONGRAT_ROT     = 6,
+    CONGRAT_ROT_SCA = 7,
+    CONGRAT_SCA     = 8,
+    DARWIN          = 9,
+    DARWIN_ROT      = 10,
+    DARWIN_ROT_SCA  = 11,
+    DARWIN_SCA      = 12,
+    FARFAR          = 13,
+    FARFAR_ROT      = 14,
+    FARFAR_ROT_SCA  = 15,
+    FARFAR_SCA      = 16,
+};
 
 const string imgPaths[17] =
 {
@@ -39,6 +58,7 @@ string decode2DBarCode(Mat &rgbImg);
 int main()
 {
     Mat rgb;
+    Mat newSize;
     Mat grid;
     Mat rgbFiltered;
     Mat transformed;
@@ -51,34 +71,42 @@ int main()
     resizeWindow("Filtered", 500, 500);
     resizeWindow("Transform", 500, 500);
 
+    //Initialise object that will handle the colour processing
     colour_detector colourDet = colour_detector();
-
+    //Initialise object that will align the 2D barcode correctly
     image_aligner align = image_aligner();
 
-    rgb = imread(imgPaths[12], 1);
+    //read the original image
+    rgb = imread(imgPaths[FARFAR_SCA], 1);
     if(rgb.data == NULL){
         cout << "Error: File could not be read" << endl;
         exit(1);
     }
 
-    Mat newSize;
-
+    //resize the image to be 1000 pix high and 1000 pix wide
+    //this means that the decoding function can be hard coded as
+    // images are always the same size
     resize(rgb, newSize, Size(1000, 1000), 0, 0, INTER_NEAREST);
 
+    //set the new size image
     rgb = newSize;
     //creates RGB filtered image that is clearer for easy reading for decoding message
     //in the process is converted to hsv and then calculates a better RGB equivilant
 
+    //configures the grid Mat with the blue colour to get the circles
     colourDet.getCircles(rgb, grid);
 
+    //find where the circles which updates the align object
     align.findCircles(grid);
+    //draw the cirlces on original image for debugging purposes
     align.drawCircles(rgb);
 
+    //configures the grid Mat with the black colour to get the grid lines
     colourDet.getGrid(rgb, grid);
 
+    //find where the grid lines are and update the align object
     align.findGrid(grid);
 
-    transformed.create(rgb.size(), CV_8UC3);
     align.applyRotationTransform(rgb, transformed);
 
     colourDet.makeRGB(transformed, rgbFiltered);
