@@ -57,7 +57,7 @@ void image_aligner::findGrid(Mat &greySrc){
 
     threshold(greySrc, grey, 0, 255, CV_THRESH_BINARY);
 
-    HoughLines(grey, grid, 1.2, CV_PI/180,950, 0, 0);
+    HoughLines(grey, grid, 1.1, CV_PI/180,650, 0, 0);
 
     int xCount = 0;
     int yCount = 0;
@@ -87,7 +87,7 @@ void image_aligner::findGrid(Mat &greySrc){
             int ang = -1;
             //check if it is existing
             for(int i = 0; i < gridAngles.size(); i++){
-                if(gridAngles[i] == angle){
+                if((int)gridAngles[i] == (int)angle){
                     ang = i;
                 }
             }
@@ -109,7 +109,8 @@ void image_aligner::findGrid(Mat &greySrc){
         cout << "angle: " << gridAngles[i] << " count: " << gridAngCount[i] << endl;
     }
     cout << "Rotation angle is: " << angForRot  << " Degrees" << endl;
-    if(abs(angForRot) == 90 || abs(angForRot) == -90) angForRot = 0;
+    if(abs(angForRot) == 90 || abs(angForRot) == 0) angForRot = 0;
+    else angForRot = angForRot-90;
     angleToRotate = angForRot;
 }
 

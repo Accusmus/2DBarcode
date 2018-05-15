@@ -77,7 +77,7 @@ int main()
     image_aligner align = image_aligner();
 
     //read the original image
-    rgb = imread(imgPaths[FARFAR_SCA], 1);
+    rgb = imread(imgPaths[ABCDE_ROT], 1);
     if(rgb.data == NULL){
         cout << "Error: File could not be read" << endl;
         exit(1);
