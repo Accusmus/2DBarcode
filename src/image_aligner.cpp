@@ -57,7 +57,7 @@ void image_aligner::findGrid(Mat &greySrc){
 
     threshold(greySrc, grey, 0, 255, CV_THRESH_BINARY);
 
-    HoughLines(grey, grid, 0.55, CV_PI/180,600, 0, 0);
+    HoughLines(grey, grid, 1.2, CV_PI/180,950, 0, 0);
 
     int xCount = 0;
     int yCount = 0;
@@ -106,6 +106,7 @@ void image_aligner::findGrid(Mat &greySrc){
             maxCount = gridAngCount[i];
             angForRot = gridAngles[i];
         }
+        cout << "angle: " << gridAngles[i] << " count: " << gridAngCount[i] << endl;
     }
     cout << "Rotation angle is: " << angForRot  << " Degrees" << endl;
     if(abs(angForRot) == 90 || abs(angForRot) == -90) angForRot = 0;
@@ -137,7 +138,7 @@ void image_aligner::applyRotationTransform(Mat &src, Mat &dest){
 
     //first rotation is to get it so that it is rotated with 90 degrees
     Point2f center(src.cols/2, src.rows/2);
-    Mat r = getRotationMatrix2D(center, -angleToRotate, 1.0);
+    Mat r = getRotationMatrix2D(center, angleToRotate, 1.0);
     warpAffine(src, dest, r, src.size());
 
 //    Point2f srcTri[3];

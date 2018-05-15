@@ -55,12 +55,17 @@ int main()
 
     image_aligner align = image_aligner();
 
-    rgb = imread(imgPaths[9], 1);
+    rgb = imread(imgPaths[12], 1);
     if(rgb.data == NULL){
         cout << "Error: File could not be read" << endl;
         exit(1);
     }
 
+    Mat newSize;
+
+    resize(rgb, newSize, Size(1000, 1000), 0, 0, INTER_NEAREST);
+
+    rgb = newSize;
     //creates RGB filtered image that is clearer for easy reading for decoding message
     //in the process is converted to hsv and then calculates a better RGB equivilant
 
