@@ -4,8 +4,10 @@ image_aligner::image_aligner()
 {
     cannyThresh = 200;
     centerThresh = 80;
-    minRadius = 20;
+    minRadius = 10;
     maxRadius = 60;
+
+    angled = false;
 
     rotMat = Mat(2, 3, CV_32FC1);
     warpMat = Mat(2, 3, CV_32FC1);
@@ -109,8 +111,13 @@ void image_aligner::findGrid(Mat &greySrc){
         cout << "angle: " << gridAngles[i] << " count: " << gridAngCount[i] << endl;
     }
     cout << "Rotation angle is: " << angForRot  << " Degrees" << endl;
-    if(abs(angForRot) == 90 || abs(angForRot) == 0) angForRot = 0;
-    else angForRot = angForRot-90;
+    if(abs(angForRot) == 90 || abs(angForRot) == 0){
+        angForRot = 0; angled = false;
+    }
+    else{
+        angForRot = angForRot-90;
+        angled = true;
+    }
     angleToRotate = angForRot;
 }
 
@@ -130,38 +137,75 @@ void image_aligner::drawGrid(Mat& rgbSrc){
 }
 
 void image_aligner::applyRotationTransform(Mat &src, Mat &dest){
-
     // check if angle has been calculated
     if(angleToRotate == -500){
         cout << "Error: you have not called find grid function to set angle" << endl;
+        dest = src;
         return;
     }
-
     //first rotation is to get it so that it is rotated with 90 degrees
     Point2f center(src.cols/2, src.rows/2);
     Mat r = getRotationMatrix2D(center, angleToRotate, 1.0);
     warpAffine(src, dest, r, src.size());
 
-//    Point2f srcTri[3];
-//    Point2f dstTri[3];
-//
-//    dstTri[0] = Point2f(87.5,88.5);
-//    dstTri[1] = Point2f(87.5, 909.5);
-//    dstTri[2] = Point2f(908.5, 909.5);
-//
-//    srcTri[0] = Point2f(87.5, 88.5);
-//    srcTri[1] = Point2f(87.5, 909.5);
-//    srcTri[2] = Point2f(908.5, 909.5);
-//
-//
-//    warpMat = getAffineTransform(srcTri, dstTri);
-//
-//    warpAffine(src, dest, warpMat, dest.size());
-
 }
 
-void image_aligner::applyScaleTransform(Mat &src, Mat &dest){
-    cout << "scale transform not implemented yet" << endl;
+void image_aligner::rightSideUp(Mat &src, Mat &dest){
+
+    // (0,0)(0,1)(1,1)  -- does not contain 1,0 rotate 0 degrees
+    // (1,0)(0,0)(0,1)  -- does not contain 1,1 rotate 90 degrees
+    // (1,1)(1,0)(0,0)  -- does not contain 0,1 rotate 180 degrees
+    // (0,1)(1,1)(1,0)  -- does not contain 0,0 rotate 270 degrees
+
+    int rotation = 0; //rotation by 90 degrees increments
+    if(circles.size() > 3){
+        cout << "Error: too many circles detected" << endl;
+        dest = src;
+        return;
+    }
+    if(circles.size() < 3){
+        cout << "Error: too few circles detected" << endl;
+        dest = src;
+        return;
+    }
+
+    Point2i p[4] = {Point(0,0), Point(0,1), Point(1,0), Point(1,1)};
+    Point2i triangleP[3];
+
+    for(int i = 0; i < circles.size(); i++){
+        cout << "x: " << circles[i][0] << " y: " << circles[i][1] << endl;
+        if(circles[i][0] > 500){
+            triangleP[i].x = 1;
+        }
+        if(circles[i][0] < 500){
+            triangleP[i].x = 0;
+        }
+        if(circles[i][1] > 500){
+            triangleP[i].y = 1;
+        }
+        if(circles[i][1] < 500){
+            triangleP[i].y = 0;
+        }
+        cout << "tx: " << triangleP[i].x << " ty: " << triangleP[i].y << endl;
+    }
+    int bitx = triangleP[0].x ^ triangleP[1].x ^ triangleP[2].x;
+    int bity = triangleP[0].y ^ triangleP[1].y ^ triangleP[2].y;
+
+    cout << "bx: " << bitx << " by: " << bity << endl;
+
+    if((bitx == 0) && (bity == 0)){
+        rotation = 270;
+    }else if((bitx == 0) && (bity == 1)){
+        rotation = 180;
+    }else if((bitx == 1) && (bity == 1)){
+        rotation = 90;
+    }else{
+        rotation = 0;
+    }
+    cout << rotation << endl;
+    Point2f center(src.cols/2, src.rows/2);
+    Mat r = getRotationMatrix2D(center, rotation, 1.0);
+    warpAffine(src, dest, r, src.size());
 }
 
 //Getter Methods
@@ -171,4 +215,8 @@ vector<Vec3f> image_aligner::getCircles(){
 
 vector<Vec2f> image_aligner::getGrid(){
     return grid;
+}
+
+bool image_aligner::isAngled(){
+    return angled;
 }

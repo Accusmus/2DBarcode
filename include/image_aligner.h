@@ -25,7 +25,9 @@ class image_aligner
         void findGrid(Mat &greySrc);
 
         void applyRotationTransform(Mat &src, Mat &dest);
-        void applyScaleTransform(Mat &src, Mat &dest);
+        void rightSideUp(Mat &src, Mat &dest);
+
+        bool isAngled();
 
     protected:
 
@@ -39,6 +41,7 @@ class image_aligner
         vector<Vec3f> circles;
         vector<Vec2f> grid;
 
+        bool angled;
         //parameters used for circle identification
         int cannyThresh;
         int centerThresh;

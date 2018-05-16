@@ -63,13 +63,17 @@ int main()
     Mat rgbFiltered;
     Mat transformed;
 
+    Mat portion;
+
     namedWindow("Original", 0);
     namedWindow("Filtered", 0);
     namedWindow("Transform", 0);
+    namedWindow("portion", 0);
 
     resizeWindow("Original", 500, 500);
     resizeWindow("Filtered", 500, 500);
     resizeWindow("Transform", 500, 500);
+    resizeWindow("portion", 500, 500);
 
     //Initialise object that will handle the colour processing
     colour_detector colourDet = colour_detector();
@@ -77,7 +81,7 @@ int main()
     image_aligner align = image_aligner();
 
     //read the original image
-    rgb = imread(imgPaths[ABCDE_ROT], 1);
+    rgb = imread(imgPaths[FARFAR_ROT], 1);
     if(rgb.data == NULL){
         cout << "Error: File could not be read" << endl;
         exit(1);
@@ -93,14 +97,6 @@ int main()
     //creates RGB filtered image that is clearer for easy reading for decoding message
     //in the process is converted to hsv and then calculates a better RGB equivilant
 
-    //configures the grid Mat with the blue colour to get the circles
-    colourDet.getCircles(rgb, grid);
-
-    //find where the circles which updates the align object
-    align.findCircles(grid);
-    //draw the cirlces on original image for debugging purposes
-    align.drawCircles(rgb);
-
     //configures the grid Mat with the black colour to get the grid lines
     colourDet.getGrid(rgb, grid);
 
@@ -109,12 +105,31 @@ int main()
 
     align.applyRotationTransform(rgb, transformed);
 
+    //configures the grid Mat with the blue colour to get the circles
+    colourDet.getCircles(transformed, grid);
+
+    //find where the circles which updates the align object
+    align.findCircles(grid);
+
+    align.rightSideUp(transformed, transformed);
+
     colourDet.makeRGB(transformed, rgbFiltered);
 
-    string decodedMsg = decode2DBarCode(rgbFiltered);
-    cout << decodedMsg << endl;
-
     align.drawGrid(rgb);
+
+    if(align.isAngled()){
+        Rect sub = Rect(150, 150, 700, 700);
+        portion = rgbFiltered(sub);
+        resize(portion, portion, Size(1000, 1000), 0, 0, INTER_NEAREST);
+    }else{
+        portion = transformed;
+    }
+
+    //draw the cirlces on original image for debugging purposes
+    align.drawCircles(portion);
+
+    string decodedMsg = decode2DBarCode(portion);
+    cout << decodedMsg << endl;
 
    //----------------------------------------------------------------------
    //Simplified way of reading file
@@ -122,6 +137,7 @@ int main()
     imshow("Original", rgb);
     imshow("Filtered", rgbFiltered);
     imshow("Transform", transformed);
+    imshow("portion", portion);
 
     waitKey(0);
     return 0;
