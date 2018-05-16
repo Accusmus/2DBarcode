@@ -81,7 +81,7 @@ int main()
     image_aligner align = image_aligner();
 
     //read the original image
-    rgb = imread(imgPaths[FARFAR_ROT], 1);
+    rgb = imread(imgPaths[CONGRAT_ROT], 1);
     if(rgb.data == NULL){
         cout << "Error: File could not be read" << endl;
         exit(1);
@@ -110,6 +110,8 @@ int main()
 
     //find where the circles which updates the align object
     align.findCircles(grid);
+    //draw the cirlces on original image for debugging purposes
+    align.drawCircles(transformed);
 
     align.rightSideUp(transformed, transformed);
 
@@ -118,15 +120,12 @@ int main()
     align.drawGrid(rgb);
 
     if(align.isAngled()){
-        Rect sub = Rect(150, 150, 700, 700);
+        Rect sub = Rect(140, 140, 720, 720);
         portion = rgbFiltered(sub);
         resize(portion, portion, Size(1000, 1000), 0, 0, INTER_NEAREST);
     }else{
         portion = transformed;
     }
-
-    //draw the cirlces on original image for debugging purposes
-    align.drawCircles(portion);
 
     string decodedMsg = decode2DBarCode(portion);
     cout << decodedMsg << endl;
