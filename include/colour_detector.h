@@ -15,6 +15,8 @@ using namespace cv;
 #define MpixelG(image, x, y) ((uchar *) (((image).data) + (y)*((image).step)))[(x)*((image).channels())+1]
 #define MpixelR(image, x, y) ((uchar *) (((image).data) + (y)*((image).step)))[(x)*((image).channels())+2]
 
+
+//ranges for finding different colours
 const Scalar rangeRed[2] =        {Scalar(0, 50, 50), Scalar(20, 255,255)};
 const Scalar rangeGreen[2] =      {Scalar(55, 50, 50), Scalar(75, 255,255)};
 const Scalar rangeBlue[2] =       {Scalar(110, 50, 50), Scalar(130, 255,255)};

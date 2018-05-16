@@ -9,9 +9,6 @@ image_aligner::image_aligner()
 
     angled = false;
 
-    rotMat = Mat(2, 3, CV_32FC1);
-    warpMat = Mat(2, 3, CV_32FC1);
-
     angleToRotate = -500;
 }
 
@@ -59,7 +56,7 @@ void image_aligner::findGrid(Mat &greySrc){
 
     threshold(greySrc, grey, 0, 255, CV_THRESH_BINARY);
 
-    HoughLines(grey, grid, 1.1, CV_PI/180,650, 0, 0);
+    HoughLines(grey, grid, 1.6, CV_PI/180,770, 0, 0);
 
     int xCount = 0;
     int yCount = 0;
@@ -101,6 +98,9 @@ void image_aligner::findGrid(Mat &greySrc){
             }
         }
     }
+
+    //count the number of angles that are the same
+    //and find the rotation amount
     int maxCount = -10000;
     int angForRot = 0;
     for(int i = 0; i < gridAngCount.size(); i++){
@@ -108,8 +108,8 @@ void image_aligner::findGrid(Mat &greySrc){
             maxCount = gridAngCount[i];
             angForRot = gridAngles[i];
         }
-        cout << "angle: " << gridAngles[i] << " count: " << gridAngCount[i] << endl;
     }
+
     cout << "Rotation angle is: " << angForRot  << " Degrees" << endl;
     if(abs(angForRot) == 90 || abs(angForRot) == 0){
         angForRot = 0; angled = false;
@@ -136,6 +136,7 @@ void image_aligner::drawGrid(Mat& rgbSrc){
     }
 }
 
+// straighten image within 90 degrees
 void image_aligner::applyRotationTransform(Mat &src, Mat &dest){
     // check if angle has been calculated
     if(angleToRotate == -500){
@@ -150,14 +151,11 @@ void image_aligner::applyRotationTransform(Mat &src, Mat &dest){
 
 }
 
+//rotate image by either 90, 180 or 270 degrees in order to get it right side up
 void image_aligner::rightSideUp(Mat &src, Mat &dest){
-
-    // (0,0)(0,1)(1,1)  -- does not contain 1,0 rotate 0 degrees
-    // (1,0)(0,0)(0,1)  -- does not contain 1,1 rotate 90 degrees
-    // (1,1)(1,0)(0,0)  -- does not contain 0,1 rotate 180 degrees
-    // (0,1)(1,1)(1,0)  -- does not contain 0,0 rotate 270 degrees
-
     int rotation = 0; //rotation by 90 degrees increments
+
+    //we dont want to do this step if there arent 3 triangles
     if(circles.size() > 3){
         cout << "Error: too many circles detected" << endl;
         dest = src;
@@ -169,9 +167,14 @@ void image_aligner::rightSideUp(Mat &src, Mat &dest){
         return;
     }
 
-    Point2i p[4] = {Point(0,0), Point(0,1), Point(1,0), Point(1,1)};
+    //There are 4 possible orientations
+    // x = 0 being left and x = y being right etc
+    // the correct orientation has points at:
+    // |(0,0) |       |
+    // |(0,1) | (1,1) |
     Point2i triangleP[3];
 
+    //we first find where the points are
     for(int i = 0; i < circles.size(); i++){
         cout << "x: " << circles[i][0] << " y: " << circles[i][1] << endl;
         if(circles[i][0] > 500){
@@ -186,13 +189,14 @@ void image_aligner::rightSideUp(Mat &src, Mat &dest){
         if(circles[i][1] < 500){
             triangleP[i].y = 0;
         }
-        cout << "tx: " << triangleP[i].x << " ty: " << triangleP[i].y << endl;
     }
+
+    //here we find which point is missing (is not part of the triangle)
     int bitx = triangleP[0].x ^ triangleP[1].x ^ triangleP[2].x;
     int bity = triangleP[0].y ^ triangleP[1].y ^ triangleP[2].y;
 
-    cout << "bx: " << bitx << " by: " << bity << endl;
-
+    //we can deduce by knowing this which orientation it is in
+    //and therefore rotate it
     if((bitx == 0) && (bity == 0)){
         rotation = 270;
     }else if((bitx == 0) && (bity == 1)){
@@ -202,19 +206,13 @@ void image_aligner::rightSideUp(Mat &src, Mat &dest){
     }else{
         rotation = 0;
     }
-    cout << rotation << endl;
+
+    cout << "Rotate image by: " << rotation << " to be right side up." << endl;
+
+    //we then rotate the image around its center point
     Point2f center(src.cols/2, src.rows/2);
     Mat r = getRotationMatrix2D(center, rotation, 1.0);
     warpAffine(src, dest, r, src.size());
-}
-
-//Getter Methods
-vector<Vec3f> image_aligner::getCircles(){
-    return circles;
-}
-
-vector<Vec2f> image_aligner::getGrid(){
-    return grid;
 }
 
 bool image_aligner::isAngled(){

@@ -17,6 +17,14 @@ using namespace cv;
 #define MpixelG(image, x, y) ((uchar *) (((image).data) + (y)*((image).step)))[(x)*((image).channels())+1]
 #define MpixelR(image, x, y) ((uchar *) (((image).data) + (y)*((image).step)))[(x)*((image).channels())+2]
 
+
+//========================================================================================================
+// Assignment 2 - 2D Barcode
+// By: Matthew Cranskhaw
+// This source is also available on github : just use command git commit https://github.com/Accusmus/2DBarcode.git
+// you can use the enum below to load the different images
+//========================================================================================================
+
 enum {
     EMPTY2D         = 0,
     ABCDE           = 1,
@@ -57,23 +65,20 @@ const char encodingarray[64]={' ','a','b','c','d','e','f','g','h','i','j','k','l
 string decode2DBarCode(Mat &rgbImg);
 int main()
 {
-    Mat rgb;
-    Mat newSize;
-    Mat grid;
-    Mat rgbFiltered;
-    Mat transformed;
-
-    Mat portion;
+    Mat sourceImage;
+    Mat gridImage;
+    Mat circlesImage;
+    Mat filteredImage;
+    Mat transformedImage;
+    Mat scaledImage;
 
     namedWindow("Original", 0);
-    namedWindow("Filtered", 0);
-    namedWindow("Transform", 0);
-    namedWindow("portion", 0);
+    namedWindow("Transformed", 0);
+    namedWindow("FinalImage", 0);
 
     resizeWindow("Original", 500, 500);
-    resizeWindow("Filtered", 500, 500);
-    resizeWindow("Transform", 500, 500);
-    resizeWindow("portion", 500, 500);
+    resizeWindow("Transformed", 500, 500);
+    resizeWindow("FinalImage", 500, 500);
 
     //Initialise object that will handle the colour processing
     colour_detector colourDet = colour_detector();
@@ -81,8 +86,8 @@ int main()
     image_aligner align = image_aligner();
 
     //read the original image
-    rgb = imread(imgPaths[CONGRAT_ROT], 1);
-    if(rgb.data == NULL){
+    sourceImage = imread(imgPaths[FARFAR_SCA], 1);
+    if(sourceImage.data == NULL){
         cout << "Error: File could not be read" << endl;
         exit(1);
     }
@@ -90,53 +95,53 @@ int main()
     //resize the image to be 1000 pix high and 1000 pix wide
     //this means that the decoding function can be hard coded as
     // images are always the same size
-    resize(rgb, newSize, Size(1000, 1000), 0, 0, INTER_NEAREST);
+    resize(sourceImage, sourceImage, Size(1000, 1000), 0, 0, INTER_NEAREST);
 
-    //set the new size image
-    rgb = newSize;
     //creates RGB filtered image that is clearer for easy reading for decoding message
     //in the process is converted to hsv and then calculates a better RGB equivilant
 
     //configures the grid Mat with the black colour to get the grid lines
-    colourDet.getGrid(rgb, grid);
+    colourDet.getGrid(sourceImage, gridImage);
 
     //find where the grid lines are and update the align object
-    align.findGrid(grid);
+    align.findGrid(gridImage);
 
-    align.applyRotationTransform(rgb, transformed);
+    align.applyRotationTransform(sourceImage, transformedImage);
 
     //configures the grid Mat with the blue colour to get the circles
-    colourDet.getCircles(transformed, grid);
+    colourDet.getCircles(transformedImage, circlesImage);
 
     //find where the circles which updates the align object
-    align.findCircles(grid);
+    align.findCircles(circlesImage);
     //draw the cirlces on original image for debugging purposes
-    align.drawCircles(transformed);
+    align.drawCircles(transformedImage);
 
-    align.rightSideUp(transformed, transformed);
+    align.rightSideUp(transformedImage, transformedImage);
 
-    colourDet.makeRGB(transformed, rgbFiltered);
+    colourDet.makeRGB(transformedImage, filteredImage);
 
-    align.drawGrid(rgb);
+    align.drawGrid(sourceImage);
 
     if(align.isAngled()){
         Rect sub = Rect(140, 140, 720, 720);
-        portion = rgbFiltered(sub);
-        resize(portion, portion, Size(1000, 1000), 0, 0, INTER_NEAREST);
+        scaledImage = filteredImage(sub);
+        resize(scaledImage, scaledImage, Size(1000, 1000), 0, 0, INTER_NEAREST);
     }else{
-        portion = transformed;
+        scaledImage = transformedImage;
     }
 
-    string decodedMsg = decode2DBarCode(portion);
+    string decodedMsg = decode2DBarCode(scaledImage);
+
+    cout << "Below is the decoded message:" << endl;
+    cout << endl;
     cout << decodedMsg << endl;
 
    //----------------------------------------------------------------------
    //Simplified way of reading file
 
-    imshow("Original", rgb);
-    imshow("Filtered", rgbFiltered);
-    imshow("Transform", transformed);
-    imshow("portion", portion);
+    imshow("Original", sourceImage);
+    imshow("Transformed", transformedImage);
+    imshow("FinalImage", scaledImage);
 
     waitKey(0);
     return 0;
@@ -144,10 +149,9 @@ int main()
 
 
 string decode2DBarCode(Mat &rgbImg){
-    int maxColumnsNum = 48;
     int maxRowNum = 48;
 
-    int xMin = 29, xMax = 969, yMin = 29, yMax = 969;
+    int xMin = 29, yMin = 29;
 
     string decodedMsg;
 
